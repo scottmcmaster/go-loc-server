@@ -1,0 +1,14 @@
+{
+  "language": "zh-cn",
+  "messages": [{
+      "id": "Hello world!",
+      "message": "Hello world!",
+      "translation": "世界你好！"
+    },
+    {
+      "id": "Goodbye!",
+      "message": "Goodbye!",
+      "translation": "再见！"
+    }
+  ]
+}
