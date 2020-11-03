@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"fmt"
+	"encoding/csv"
+	"encoding/json"
 	"net/http"
-	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/scottmcmaster/go-loc-server/locserver/loader"
@@ -15,34 +15,70 @@ type StringsHandler struct {
 	ST *loader.StringTable
 }
 
+type stringTranslation struct {
+	ID          string `json:"id"`
+	Translation string `json:"translation"`
+}
+
 func (h StringsHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	lang, accept, param := ExtractLang(req)
+	lang, acceptLang, param := ExtractLang(req)
+	contentType := ExtractContentType(req)
 
-	tag, _ := language.MatchStrings(*h.ST.Matcher, lang, accept, param)
+	tag, _ := language.MatchStrings(*h.ST.Matcher, lang, acceptLang, param)
 
-	sb := strings.Builder{}
 	log.Debug().
 		Str("cookie", lang).
-		Str("accept", accept).
+		Str("accept", acceptLang).
+		Str("content_type", contentType).
 		Str("language_tag", tag.String()).
 		Msg("Returning strings")
 
-	res.Header().Set("Content-Type", "text/plain")
-
 	strs, err := h.ST.Loader.StringsByTag(tag)
 	if err != nil {
-		log.Error().Str("languagetag", tag.String()).
+		log.Error().Str("language_tag", tag.String()).Err(err).
 			Msg("Getting strings for tag")
 		res.Write([]byte("404 - Language not found"))
 		res.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	for k, v := range strs.Strings {
-		sb.WriteString(fmt.Sprintf("%s\t%s\n", k, v))
+	switch contentType {
+	case "application/json":
+		err = writeJSON(res, strs)
+	case "text/csv":
+		fallthrough
+	default:
+		err = writeCSV(res, strs)
 	}
 
-	data := []byte(sb.String())
+	if err != nil {
+		log.Error().Str("language_tag", tag.String()).Err(err).
+			Msg("Unexpected error writing response")
+		res.Write([]byte("500 - Unexpected error"))
+		res.WriteHeader(http.StatusInternalServerError)
+	}
+
 	res.WriteHeader(http.StatusOK)
-	res.Write(data)
+}
+
+func writeCSV(res http.ResponseWriter, strs *loader.StringCatalog) error {
+	res.Header().Set("Content-Type", "text/csv")
+	w := csv.NewWriter(res)
+	for k, v := range strs.Strings {
+		w.Write([]string{k, v})
+	}
+	return nil
+}
+
+func writeJSON(res http.ResponseWriter, strs *loader.StringCatalog) error {
+	res.Header().Set("Content-Type", "application/json")
+	data := []stringTranslation{}
+	for k, v := range strs.Strings {
+		data = append(data, stringTranslation{
+			Translation: v,
+			ID:          k,
+		})
+	}
+
+	return json.NewEncoder(res).Encode(data)
 }
