@@ -11,7 +11,7 @@
       "mode": "auto",
       "program": "${fileDirname}",
       "env": {},
-      "args": ["--server", "--debug", "--localesdir", "./locales-xliff2", "--loader", "xliff2"]
+      "args": ["--server", "--debug", "--localesdir", "./locales-po", "--loader", "po"]
     },
     {
       "name": "Test Current File",

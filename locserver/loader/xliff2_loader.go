@@ -53,8 +53,14 @@ func (ldr *XLIFF2Loader) StringsByTag(tag language.Tag) (*StringCatalog, error) 
 	return nil, errors.New("catalog not found for tag " + tag.String())
 }
 
+// NeedsTag implements the Loader interface.
+func (ldr *XLIFF2Loader) NeedsTag() bool {
+	// Not needed because the langauge is embedded in the file.
+	return false
+}
+
 // LoadMessagesFromFile implements the Loader interface.
-func (ldr *XLIFF2Loader) LoadMessagesFromFile(filename string) error {
+func (ldr *XLIFF2Loader) LoadMessagesFromFile(filename string, tagStr string) error {
 	file, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return err
@@ -68,7 +74,7 @@ func (ldr *XLIFF2Loader) LoadMessagesFromFile(filename string) error {
 		return err
 	}
 
-	tagStr := t.String()
+	tagStr = t.String()
 	ldr.catalogsByTagStr[tagStr] = NewStringCatalog()
 
 	for _, u := range xlf.File.Unit {

@@ -41,8 +41,14 @@ func (ldr *GoTextJSONLoader) StringsByTag(tag language.Tag) (*StringCatalog, err
 	return nil, errors.New("catalog not found for tag " + tag.String())
 }
 
+// NeedsTag implements the Loader interface.
+func (ldr *GoTextJSONLoader) NeedsTag() bool {
+	// Not needed because the langauge is embedded in the file.
+	return false
+}
+
 // LoadMessagesFromFile implements the Loader interface.
-func (ldr *GoTextJSONLoader) LoadMessagesFromFile(filename string) error {
+func (ldr *GoTextJSONLoader) LoadMessagesFromFile(filename string, tagStr string) error {
 	file, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return err
@@ -60,7 +66,7 @@ func (ldr *GoTextJSONLoader) LoadMessagesFromFile(filename string) error {
 		return err
 	}
 
-	tagStr := t.String()
+	tagStr = t.String()
 	ldr.catalogsByTagStr[tagStr] = NewStringCatalog()
 
 	for _, m := range lm.Messages {

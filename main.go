@@ -22,11 +22,12 @@ type loaderType string
 const (
 	goText loaderType = "gotext"
 	xliff2            = "xliff2"
+	po                = "po"
 )
 
 func (lt loaderType) IsValid() error {
 	switch lt {
-	case goText, xliff2:
+	case goText, xliff2, po:
 		return nil
 	}
 	return errors.New("invalid loader type")
@@ -90,6 +91,8 @@ func createLoader(lt loaderType) (loader.Loader, error) {
 		return loader.NewGoTextJSONLoader(), nil
 	case xliff2:
 		return loader.NewXLIFF2Loader(), nil
+	case po:
+		return loader.NewPOLoader(), nil
 	}
 
 	return nil, errors.New("unknown loader type " + string(lt))

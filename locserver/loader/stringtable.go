@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"path"
+	"path/filepath"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/rs/zerolog/log"
@@ -70,7 +71,12 @@ func (st *StringTable) loadMessageFromDirectory(dirname string) error {
 		if f.IsDir() {
 			err = st.loadMessageFromDirectory(fullPath)
 		} else {
-			err = st.Loader.LoadMessagesFromFile(fullPath)
+			tagStr := ""
+			if st.Loader.NeedsTag() {
+				_, parentDir := filepath.Split(dirname)
+				tagStr = parentDir
+			}
+			err = st.Loader.LoadMessagesFromFile(fullPath, tagStr)
 		}
 
 		if err != nil {
