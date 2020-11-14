@@ -1,0 +1,14 @@
+<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en-us" trgLang="en-us">
+ <file id="en-us">
+  <unit>
+   <segment id="Hello world!">
+    <source>Hello world!</source>
+    <target>Hello world!</target>
+   </segment>
+   <segment id="Goodbye!">
+    <source>Goodbye!</source>
+    <target>Goodbye!</target>
+   </segment>
+  </unit>
+ </file>
+</xliff>

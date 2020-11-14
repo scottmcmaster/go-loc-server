@@ -1,0 +1,14 @@
+<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en-us" trgLang="zh-cn">
+ <file id="zh-cn">
+  <unit>
+   <segment id="Hello world!">
+    <source>Hello world!</source>
+    <target>世界你好！</target>
+   </segment>
+   <segment id="Goodbye!">
+    <source>Goodbye!</source>
+    <target>再见！</target>
+   </segment>
+  </unit>
+ </file>
+</xliff>

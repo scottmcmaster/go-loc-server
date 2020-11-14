@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"net/http"
 	"strconv"
@@ -16,8 +17,24 @@ import (
 	"github.com/scottmcmaster/go-loc-server/locserver/loader"
 )
 
+type loaderType string
+
+const (
+	goText loaderType = "gotext"
+	xliff2            = "xliff2"
+)
+
+func (lt loaderType) IsValid() error {
+	switch lt {
+	case goText, xliff2:
+		return nil
+	}
+	return errors.New("invalid loader type")
+}
+
 var lang = flag.String("lang", "en-us", "use language")
-var localesDir = flag.String("localesdir", "./locales", "base directory of locale files")
+var localesDir = flag.String("localesdir", "./locales-gotext", "base directory of locale files")
+var loaderTypeFl = flag.String("loader", "gotext", "loader type")
 var debug = flag.Bool("debug", false, "sets log level to debug")
 var server = flag.Bool("server", false, "starts in server mode")
 var port = flag.Int("port", 3001, "http port")
@@ -31,12 +48,21 @@ func main() {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
 
-	strs := &loader.StringTable{
-		LocalesDir: *localesDir,
-		Loader:     loader.NewGoTextJSONLoader(),
+	lt := loaderType(*loaderTypeFl)
+	if err := lt.IsValid(); err != nil {
+		log.Panic().Err(err).Msg("Loader type")
+	}
+	ldr, err := createLoader(lt)
+	if err != nil {
+		log.Panic().Err(err).Msg("Loader")
 	}
 
-	err := strs.Load()
+	strs := &loader.StringTable{
+		LocalesDir: *localesDir,
+		Loader:     ldr,
+	}
+
+	err = strs.Load()
 	if err != nil {
 		log.Panic().Err(err).Msg("Fatal error while loading")
 	}
@@ -54,6 +80,19 @@ func main() {
 		p := message.NewPrinter(tag)
 		p.Printf("Hello world!")
 	}
+}
+
+func createLoader(lt loaderType) (loader.Loader, error) {
+	log.Info().Str("loaderType", string(lt)).Msg("Creating loader")
+
+	switch lt {
+	case goText:
+		return loader.NewGoTextJSONLoader(), nil
+	case xliff2:
+		return loader.NewXLIFF2Loader(), nil
+	}
+
+	return nil, errors.New("unknown loader type " + string(lt))
 }
 
 func startServer(strs *loader.StringTable, port int) {
