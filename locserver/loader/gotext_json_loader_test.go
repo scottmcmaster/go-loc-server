@@ -5,16 +5,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/text/language"
-	"golang.org/x/text/message"
 )
 
-func getPrinter(lang string) *message.Printer {
-	tag, _ := language.Parse(lang)
-	return message.NewPrinter(tag)
-}
-
-func TestSimpleLoad(t *testing.T) {
+func TestSimpleGoTextJSONLoad(t *testing.T) {
 	data := `{
 		"language": "en-us",
 		"messages": [{
@@ -48,7 +41,7 @@ func TestSimpleLoad(t *testing.T) {
 	assert.Equal(t, "bar", p.Sprintf("bar"))
 }
 
-func TestMultipleLoad(t *testing.T) {
+func TestMultipleGoTextJSONLoad(t *testing.T) {
 	data := `{
 		"language": "en-us",
 		"messages": [{
