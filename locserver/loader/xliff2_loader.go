@@ -92,36 +92,3 @@ func (ldr *XLIFF2Loader) ReadMessages(reader io.Reader, tagStr string) error {
 
 	return nil
 }
-
-// LoadMessagesFromFile implements the Loader interface.
-func (ldr *XLIFF2Loader) LoadMessagesFromFile(filename string, tagStr string) error {
-	file, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return err
-	}
-
-	var xlf xliff
-	xml.Unmarshal(file, &xlf)
-
-	t, err := language.Parse(xlf.TrgLang)
-	if err != nil {
-		return err
-	}
-
-	tagStr = t.String()
-	ldr.catalogsByTagStr[tagStr] = NewStringCatalog()
-
-	for _, u := range xlf.File.Unit {
-		for _, seg := range u.Segment {
-			log.Debug().Str("languagetag", tagStr).
-				Str("id", seg.ID).
-				Str("translation", seg.Target).
-				Msg("Loading string")
-			message.SetString(t, seg.ID, seg.Target)
-
-			ldr.catalogsByTagStr[tagStr].Strings[seg.ID] = seg.Target
-		}
-	}
-
-	return nil
-}

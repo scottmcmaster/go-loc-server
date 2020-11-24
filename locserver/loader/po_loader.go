@@ -41,12 +41,6 @@ func (ldr *POLoader) NeedsTag() bool {
 
 // ReadMessages implements the Loader interface.
 func (ldr *POLoader) ReadMessages(reader io.Reader, tagStr string) error {
-
-	return nil
-}
-
-// LoadMessagesFromFile implements the Loader interface.
-func (ldr *POLoader) LoadMessagesFromFile(filename string, tagStr string) error {
 	if len(tagStr) == 0 {
 		return errors.New("tag string is required by PO loader")
 	}
@@ -56,9 +50,9 @@ func (ldr *POLoader) LoadMessagesFromFile(filename string, tagStr string) error 
 		return err
 	}
 
-	buf, err := ioutil.ReadFile(filename)
+	buf, err := ioutil.ReadAll(reader)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	ldr.catalogsByTagStr[tagStr] = NewStringCatalog()

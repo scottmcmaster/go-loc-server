@@ -13,10 +13,6 @@ type StringCatalog struct {
 
 // Loader loads messages.
 type Loader interface {
-	// LoadMessagesFromFile loads messages from the given file.
-	// tagStr may be ignored by the implementation if NeedsTag is false.
-	LoadMessagesFromFile(filename string, tagStr string) error
-
 	StringsByTag(tag language.Tag) (*StringCatalog, error)
 
 	// NeedsTag indicates whether or not this loader requires that the language tag

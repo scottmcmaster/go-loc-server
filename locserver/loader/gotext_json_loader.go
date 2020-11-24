@@ -83,38 +83,3 @@ func (ldr *GoTextJSONLoader) ReadMessages(reader io.Reader, tagStr string) error
 
 	return nil
 }
-
-// LoadMessagesFromFile implements the Loader interface.
-func (ldr *GoTextJSONLoader) LoadMessagesFromFile(filename string, tagStr string) error {
-	file, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return err
-	}
-
-	lm := langmessages{}
-
-	err = json.Unmarshal([]byte(file), &lm)
-	if err != nil {
-		return err
-	}
-
-	t, err := language.Parse(lm.Language)
-	if err != nil {
-		return err
-	}
-
-	tagStr = t.String()
-	ldr.catalogsByTagStr[tagStr] = NewStringCatalog()
-
-	for _, m := range lm.Messages {
-		log.Debug().Str("languagetag", tagStr).
-			Str("id", m.ID).
-			Str("translation", m.Translation).
-			Msg("Loading string")
-		message.SetString(t, m.ID, m.Translation)
-
-		ldr.catalogsByTagStr[tagStr].Strings[m.ID] = m.Translation
-	}
-
-	return nil
-}
