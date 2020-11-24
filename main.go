@@ -11,7 +11,6 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"golang.org/x/text/language"
-	"golang.org/x/text/message"
 
 	"github.com/scottmcmaster/go-loc-server/locserver/handlers"
 	"github.com/scottmcmaster/go-loc-server/locserver/loader"
@@ -39,6 +38,7 @@ var loaderTypeFl = flag.String("loader", "gotext", "loader type")
 var debug = flag.Bool("debug", false, "sets log level to debug")
 var server = flag.Bool("server", false, "starts in server mode")
 var port = flag.Int("port", 3001, "http port")
+var watch = flag.Bool("watch", true, "watch locales dir for changes and hot-reload")
 
 func main() {
 	flag.Parse()
@@ -58,15 +58,16 @@ func main() {
 		log.Panic().Err(err).Msg("Loader")
 	}
 
-	strs := &loader.StringTable{
-		LocalesDir: *localesDir,
-		Loader:     ldr,
+	strs, err := loader.NewStringTable(*localesDir, *watch, ldr)
+	if err != nil {
+		log.Panic().Err(err).Msg("StringTable")
 	}
 
 	err = strs.Load()
 	if err != nil {
 		log.Panic().Err(err).Msg("Fatal error while loading")
 	}
+	defer strs.Close()
 
 	if *server {
 		startServer(strs, *port)
@@ -77,9 +78,6 @@ func main() {
 
 		tag, _ := language.MatchStrings(*strs.Matcher, *lang)
 		log.Info().Str("language_tag", tag.String()).Msg("Using language tag")
-
-		p := message.NewPrinter(tag)
-		p.Printf("Hello world!")
 	}
 }
 

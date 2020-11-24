@@ -29,7 +29,6 @@ func (h StringHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		Str("accept", accept).
 		Str("language_tag", tag.String()).
 		Msg("Returning string")
-	p.Printf(str)
 
 	data := []byte(str)
 	res.Header().Set("Content-Type", "text/plain")

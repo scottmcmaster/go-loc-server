@@ -2,13 +2,16 @@ package loader
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
+	"os"
 	"path"
 	"path/filepath"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/rs/zerolog/log"
 
+	"github.com/fsnotify/fsnotify"
 	"golang.org/x/text/language"
 )
 
@@ -17,6 +20,25 @@ type StringTable struct {
 	LocalesDir string
 	Matcher    *language.Matcher
 	Loader     Loader
+	watcher    *fsnotify.Watcher
+}
+
+// NewStringTable is a factory method for StringTable
+func NewStringTable(localesDir string, watch bool, ldr Loader) (*StringTable, error) {
+	strs := &StringTable{
+		LocalesDir: localesDir,
+		Loader:     ldr,
+	}
+
+	if watch {
+		watcher, err := fsnotify.NewWatcher()
+		if err != nil {
+			return nil, fmt.Errorf("failed to create watcher on %s: %v", localesDir, err)
+		}
+		strs.watcher = watcher
+	}
+
+	return strs, nil
 }
 
 // Load loads the languages from the configured local directory.
@@ -40,7 +62,7 @@ func (st *StringTable) Load() error {
 		}
 		tags = append(tags, t)
 
-		err = st.loadMessageFromDirectory(path.Join(st.LocalesDir, f.Name()))
+		err = st.loadMessagesFromDirectory(path.Join(st.LocalesDir, f.Name()))
 		if err != nil {
 			log.Warn().Err(err).Str("locale", f.Name()).Msg("Error reading locale directory")
 		}
@@ -54,14 +76,66 @@ func (st *StringTable) Load() error {
 	matcher := language.NewMatcher(tags)
 	st.Matcher = &matcher
 
+	if st.watcher != nil {
+		go st.watch()
+	}
+
 	return nil
 }
 
-func (st *StringTable) loadMessageFromDirectory(dirname string) error {
+func (st *StringTable) watch() {
+	done := make(chan bool)
+
+	go func() {
+		for {
+			select {
+			// watch for events
+			case event := <-st.watcher.Events:
+				log.Info().Str("name", event.Name).Uint32("op", uint32(event.Op)).Msg("Reloading strings")
+				file, err := os.Open(event.Name)
+				if err != nil {
+					log.Error().Str("name", event.Name).Err(err).Msg("Can't get file")
+					return
+				}
+
+				stat, err := file.Stat()
+				if err != nil {
+					log.Error().Str("name", event.Name).Err(err).Msg("Can't stat")
+					return
+				}
+
+				if stat.IsDir() {
+					err = st.loadMessagesFromDirectory(event.Name)
+				} else {
+					err = st.loadMessagesFromFile(event.Name)
+				}
+
+				if err != nil {
+					log.Error().Err(err).Msg("Error reloading, not reloaded")
+				}
+
+			// watch for errors
+			case err := <-st.watcher.Errors:
+				log.Error().Err(err).Msg("Error from directory watcher, not reloading")
+			}
+		}
+	}()
+
+	<-done
+}
+
+// Close deinitializes the StringTable.
+func (st *StringTable) Close() {
+	st.watcher.Close()
+}
+
+func (st *StringTable) loadMessagesFromDirectory(dirname string) error {
 	files, err := ioutil.ReadDir(dirname)
 	if err != nil {
 		return err
 	}
+
+	st.watcher.Remove(dirname)
 
 	var result error
 
@@ -69,14 +143,9 @@ func (st *StringTable) loadMessageFromDirectory(dirname string) error {
 		fullPath := path.Join(dirname, f.Name())
 
 		if f.IsDir() {
-			err = st.loadMessageFromDirectory(fullPath)
+			err = st.loadMessagesFromDirectory(fullPath) // recursive
 		} else {
-			tagStr := ""
-			if st.Loader.NeedsTag() {
-				_, parentDir := filepath.Split(dirname)
-				tagStr = parentDir
-			}
-			err = st.Loader.LoadMessagesFromFile(fullPath, tagStr)
+			err = st.loadMessagesFromFile(fullPath)
 		}
 
 		if err != nil {
@@ -84,5 +153,19 @@ func (st *StringTable) loadMessageFromDirectory(dirname string) error {
 		}
 	}
 
+	if st.watcher != nil {
+		st.watcher.Add(dirname)
+	}
+
 	return result
+}
+
+func (st *StringTable) loadMessagesFromFile(fullPath string) error {
+	tagStr := ""
+	if st.Loader.NeedsTag() {
+		_, dirname := filepath.Split(fullPath)
+		_, parentDir := filepath.Split(dirname)
+		tagStr = parentDir
+	}
+	return st.Loader.LoadMessagesFromFile(fullPath, tagStr)
 }
