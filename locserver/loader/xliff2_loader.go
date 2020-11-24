@@ -3,6 +3,7 @@ package loader
 import (
 	"encoding/xml"
 	"errors"
+	"io"
 	"io/ioutil"
 
 	"github.com/rs/zerolog/log"
@@ -57,6 +58,39 @@ func (ldr *XLIFF2Loader) StringsByTag(tag language.Tag) (*StringCatalog, error) 
 func (ldr *XLIFF2Loader) NeedsTag() bool {
 	// Not needed because the langauge is embedded in the file.
 	return false
+}
+
+// ReadMessages implements the Loader interface.
+func (ldr *XLIFF2Loader) ReadMessages(reader io.Reader, tagStr string) error {
+	data, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return err
+	}
+
+	var xlf xliff
+	xml.Unmarshal(data, &xlf)
+
+	t, err := language.Parse(xlf.TrgLang)
+	if err != nil {
+		return err
+	}
+
+	tagStr = t.String()
+	ldr.catalogsByTagStr[tagStr] = NewStringCatalog()
+
+	for _, u := range xlf.File.Unit {
+		for _, seg := range u.Segment {
+			log.Debug().Str("languagetag", tagStr).
+				Str("id", seg.ID).
+				Str("translation", seg.Target).
+				Msg("Loading string")
+			message.SetString(t, seg.ID, seg.Target)
+
+			ldr.catalogsByTagStr[tagStr].Strings[seg.ID] = seg.Target
+		}
+	}
+
+	return nil
 }
 
 // LoadMessagesFromFile implements the Loader interface.

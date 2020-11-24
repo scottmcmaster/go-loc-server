@@ -2,6 +2,7 @@ package loader
 
 import (
 	"errors"
+	"io"
 	"io/ioutil"
 	"regexp"
 
@@ -36,6 +37,12 @@ func (ldr *POLoader) StringsByTag(tag language.Tag) (*StringCatalog, error) {
 func (ldr *POLoader) NeedsTag() bool {
 	// Needed because the langauge is not embedded in the file.
 	return true
+}
+
+// ReadMessages implements the Loader interface.
+func (ldr *POLoader) ReadMessages(reader io.Reader, tagStr string) error {
+
+	return nil
 }
 
 // LoadMessagesFromFile implements the Loader interface.

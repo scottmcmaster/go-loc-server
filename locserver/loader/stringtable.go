@@ -1,6 +1,7 @@
 package loader
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -167,5 +168,13 @@ func (st *StringTable) loadMessagesFromFile(fullPath string) error {
 		_, parentDir := filepath.Split(dirname)
 		tagStr = parentDir
 	}
-	return st.Loader.LoadMessagesFromFile(fullPath, tagStr)
+
+	file, err := os.Open(fullPath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	reader := bufio.NewReader(file)
+	return st.Loader.ReadMessages(reader, tagStr)
 }
