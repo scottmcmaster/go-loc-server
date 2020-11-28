@@ -26,7 +26,7 @@ func TestSimpleGoTextJSONLoad(t *testing.T) {
 	reader := strings.NewReader(data)
 
 	loader := NewGoTextJSONLoader()
-	err := loader.ReadMessages(reader, "")
+	err := loader.ReadMessages(reader, nil)
 
 	assert.Nil(t, err)
 
@@ -74,11 +74,11 @@ func TestMultipleGoTextJSONLoad(t *testing.T) {
 
 	loader := NewGoTextJSONLoader()
 	reader := strings.NewReader(data)
-	err := loader.ReadMessages(reader, "")
+	err := loader.ReadMessages(reader, nil)
 	assert.Nil(t, err)
 
 	reader = strings.NewReader(data2)
-	err = loader.ReadMessages(reader, "")
+	err = loader.ReadMessages(reader, nil)
 	assert.Nil(t, err)
 
 	// Test the first lang

@@ -49,7 +49,7 @@ func (ldr *GoTextJSONLoader) NeedsTag() bool {
 }
 
 // ReadMessages implements the Loader interface.
-func (ldr *GoTextJSONLoader) ReadMessages(reader io.Reader, tagStr string) error {
+func (ldr *GoTextJSONLoader) ReadMessages(reader io.Reader, tag *language.Tag) error {
 
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
@@ -68,7 +68,7 @@ func (ldr *GoTextJSONLoader) ReadMessages(reader io.Reader, tagStr string) error
 		return err
 	}
 
-	tagStr = t.String()
+	tagStr := t.String()
 	ldr.catalogsByTagStr[tagStr] = NewStringCatalog()
 
 	for _, m := range lm.Messages {

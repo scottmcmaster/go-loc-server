@@ -162,11 +162,17 @@ func (st *StringTable) loadMessagesFromDirectory(dirname string) error {
 }
 
 func (st *StringTable) loadMessagesFromFile(fullPath string) error {
-	tagStr := ""
+	var tag language.Tag
+	var err error
 	if st.Loader.NeedsTag() {
-		_, dirname := filepath.Split(fullPath)
+		dirname := filepath.Dir(fullPath)
 		_, parentDir := filepath.Split(dirname)
-		tagStr = parentDir
+		tagStr := parentDir
+
+		tag, err = language.Parse(tagStr)
+		if err != nil {
+			return err
+		}
 	}
 
 	file, err := os.Open(fullPath)
@@ -176,5 +182,5 @@ func (st *StringTable) loadMessagesFromFile(fullPath string) error {
 	defer file.Close()
 
 	reader := bufio.NewReader(file)
-	return st.Loader.ReadMessages(reader, tagStr)
+	return st.Loader.ReadMessages(reader, &tag)
 }

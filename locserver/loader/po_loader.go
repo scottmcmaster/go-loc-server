@@ -40,14 +40,9 @@ func (ldr *POLoader) NeedsTag() bool {
 }
 
 // ReadMessages implements the Loader interface.
-func (ldr *POLoader) ReadMessages(reader io.Reader, tagStr string) error {
-	if len(tagStr) == 0 {
+func (ldr *POLoader) ReadMessages(reader io.Reader, tag *language.Tag) error {
+	if tag == nil {
 		return errors.New("tag string is required by PO loader")
-	}
-
-	t, err := language.Parse(tagStr)
-	if err != nil {
-		return err
 	}
 
 	buf, err := ioutil.ReadAll(reader)
@@ -55,6 +50,7 @@ func (ldr *POLoader) ReadMessages(reader io.Reader, tagStr string) error {
 		return err
 	}
 
+	tagStr := tag.String()
 	ldr.catalogsByTagStr[tagStr] = NewStringCatalog()
 
 	re := regexp.MustCompile(pattern)
@@ -66,7 +62,7 @@ func (ldr *POLoader) ReadMessages(reader io.Reader, tagStr string) error {
 			Str("id", array[1]).
 			Str("translation", array[2]).
 			Msg("Loading string")
-		message.SetString(t, array[1], array[2])
+		message.SetString(*tag, array[1], array[2])
 
 		ldr.catalogsByTagStr[tagStr].Strings[array[1]] = array[2]
 		pairs[array[1]] = array[2]

@@ -20,8 +20,8 @@ type Loader interface {
 	NeedsTag() bool
 
 	// ReadMessages loads messages from the given reader.
-	// tagStr may be ignored by the implementation if NeedsTag is false.
-	ReadMessages(reader io.Reader, tagStr string) error
+	// tag may be ignored by the implementation if NeedsTag is false.
+	ReadMessages(reader io.Reader, tag *language.Tag) error
 }
 
 // NewStringCatalog factory method.

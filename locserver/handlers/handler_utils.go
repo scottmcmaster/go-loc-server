@@ -12,6 +12,15 @@ const DefaultContentType = "text/csv"
 
 var supportedContentTypes = map[string]bool{"text/csv": true, "application/json": true}
 
+// GetQueryParam gets the first (if any) value from the query string with the given param name.
+func GetQueryParam(req *http.Request, paramName string) string {
+	vals, ok := req.URL.Query()[paramName]
+	if ok && len(vals) > 0 {
+		return vals[0]
+	}
+	return ""
+}
+
 // ExtractLang pulls the best possible language out of a request.
 func ExtractLang(req *http.Request) (lang string, accept string, param string) {
 	langCookie, _ := req.Cookie("lang")
@@ -19,12 +28,7 @@ func ExtractLang(req *http.Request) (lang string, accept string, param string) {
 		lang = langCookie.Value
 	}
 	accept = req.Header.Get("Accept-Language")
-
-	langKeys, ok := req.URL.Query()["lang"]
-	if ok && len(langKeys) > 0 {
-		param = langKeys[0]
-	}
-
+	param = GetQueryParam(req, "lang")
 	return
 }
 
@@ -33,6 +37,13 @@ func ExtractLang(req *http.Request) (lang string, accept string, param string) {
 func ExtractContentType(req *http.Request) (contentType string) {
 	// Default to csv
 	contentType = DefaultContentType
+
+	contentType = GetQueryParam(req, "fmt")
+	if len(contentType) == 0 {
+		log.Debug().
+			Msg("Returning format from query param")
+		return
+	}
 
 	rawHeader := req.Header.Get("Accept")
 	if len(rawHeader) == 0 {

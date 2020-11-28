@@ -61,7 +61,7 @@ func (ldr *XLIFF2Loader) NeedsTag() bool {
 }
 
 // ReadMessages implements the Loader interface.
-func (ldr *XLIFF2Loader) ReadMessages(reader io.Reader, tagStr string) error {
+func (ldr *XLIFF2Loader) ReadMessages(reader io.Reader, tag *language.Tag) error {
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return err
@@ -75,7 +75,7 @@ func (ldr *XLIFF2Loader) ReadMessages(reader io.Reader, tagStr string) error {
 		return err
 	}
 
-	tagStr = t.String()
+	tagStr := t.String()
 	ldr.catalogsByTagStr[tagStr] = NewStringCatalog()
 
 	for _, u := range xlf.File.Unit {
