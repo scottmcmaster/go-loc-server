@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"regexp"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"golang.org/x/text/language"
@@ -40,7 +41,7 @@ func (ldr *POLoader) NeedsTag() bool {
 }
 
 // ReadMessages implements the Loader interface.
-func (ldr *POLoader) ReadMessages(reader io.Reader, tag *language.Tag) error {
+func (ldr *POLoader) ReadMessages(reader io.Reader, tag *language.Tag, modTime time.Time) error {
 	if tag == nil {
 		return errors.New("tag string is required by PO loader")
 	}
@@ -51,7 +52,7 @@ func (ldr *POLoader) ReadMessages(reader io.Reader, tag *language.Tag) error {
 	}
 
 	tagStr := tag.String()
-	ldr.catalogsByTagStr[tagStr] = NewStringCatalog()
+	ldr.catalogsByTagStr[tagStr] = NewStringCatalog(modTime)
 
 	re := regexp.MustCompile(pattern)
 	matches := re.FindAllStringSubmatch(string(buf), -1)

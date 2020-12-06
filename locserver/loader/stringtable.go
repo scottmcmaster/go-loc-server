@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"time"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/rs/zerolog/log"
@@ -21,14 +22,20 @@ type StringTable struct {
 	LocalesDir string
 	Matcher    *language.Matcher
 	Loader     Loader
-	watcher    *fsnotify.Watcher
+
+	// watcher looks for updates in the loc files
+	watcher *fsnotify.Watcher
+
+	// fileModTimes is a cache of mod times for the loc files
+	fileModTimes map[string]time.Time
 }
 
 // NewStringTable is a factory method for StringTable
 func NewStringTable(localesDir string, watch bool, ldr Loader) (*StringTable, error) {
 	strs := &StringTable{
-		LocalesDir: localesDir,
-		Loader:     ldr,
+		LocalesDir:   localesDir,
+		Loader:       ldr,
+		fileModTimes: map[string]time.Time{},
 	}
 
 	if watch {
@@ -175,6 +182,11 @@ func (st *StringTable) loadMessagesFromFile(fullPath string) error {
 		}
 	}
 
+	stat, err := os.Stat(fullPath)
+	if err != nil {
+		return err
+	}
+
 	file, err := os.Open(fullPath)
 	if err != nil {
 		return err
@@ -182,5 +194,5 @@ func (st *StringTable) loadMessagesFromFile(fullPath string) error {
 	defer file.Close()
 
 	reader := bufio.NewReader(file)
-	return st.Loader.ReadMessages(reader, &tag)
+	return st.Loader.ReadMessages(reader, &tag, stat.ModTime())
 }

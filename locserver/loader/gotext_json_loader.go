@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"golang.org/x/text/language"
@@ -49,7 +50,7 @@ func (ldr *GoTextJSONLoader) NeedsTag() bool {
 }
 
 // ReadMessages implements the Loader interface.
-func (ldr *GoTextJSONLoader) ReadMessages(reader io.Reader, tag *language.Tag) error {
+func (ldr *GoTextJSONLoader) ReadMessages(reader io.Reader, tag *language.Tag, modTime time.Time) error {
 
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
@@ -69,7 +70,7 @@ func (ldr *GoTextJSONLoader) ReadMessages(reader io.Reader, tag *language.Tag) e
 	}
 
 	tagStr := t.String()
-	ldr.catalogsByTagStr[tagStr] = NewStringCatalog()
+	ldr.catalogsByTagStr[tagStr] = NewStringCatalog(modTime)
 
 	for _, m := range lm.Messages {
 		log.Debug().Str("languagetag", tagStr).

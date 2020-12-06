@@ -39,6 +39,7 @@ func TestExtractLang_None(t *testing.T) {
 func TestExtractContentType_Default(t *testing.T) {
 	req := &http.Request{
 		Header: http.Header{},
+		URL:    &url.URL{},
 	}
 
 	contentType := ExtractContentType(req)
@@ -47,6 +48,7 @@ func TestExtractContentType_Default(t *testing.T) {
 
 func TestExtractContentType_FromOneHeader(t *testing.T) {
 	req := &http.Request{
+		URL:    &url.URL{},
 		Header: http.Header{},
 	}
 	req.Header.Add("Accept", "application/json")
@@ -57,6 +59,7 @@ func TestExtractContentType_FromOneHeader(t *testing.T) {
 
 func TestExtractContentType_FromTwoHeaderFirstNotSupported(t *testing.T) {
 	req := &http.Request{
+		URL:    &url.URL{},
 		Header: http.Header{},
 	}
 	req.Header.Add("Accept", "text/html,application/json")
@@ -67,6 +70,7 @@ func TestExtractContentType_FromTwoHeaderFirstNotSupported(t *testing.T) {
 
 func TestExtractContentType_FromOneHeaderNotSupported(t *testing.T) {
 	req := &http.Request{
+		URL:    &url.URL{},
 		Header: http.Header{},
 	}
 	req.Header.Add("Accept", "text/html")
@@ -77,6 +81,7 @@ func TestExtractContentType_FromOneHeaderNotSupported(t *testing.T) {
 
 func TestExtractContentType_IgnorePriority(t *testing.T) {
 	req := &http.Request{
+		URL:    &url.URL{},
 		Header: http.Header{},
 	}
 	req.Header.Add("Accept", "application/json;q=0.9,text/csv")

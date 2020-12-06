@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"golang.org/x/text/language"
@@ -61,7 +62,7 @@ func (ldr *XLIFF2Loader) NeedsTag() bool {
 }
 
 // ReadMessages implements the Loader interface.
-func (ldr *XLIFF2Loader) ReadMessages(reader io.Reader, tag *language.Tag) error {
+func (ldr *XLIFF2Loader) ReadMessages(reader io.Reader, tag *language.Tag, modTime time.Time) error {
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return err
@@ -76,7 +77,7 @@ func (ldr *XLIFF2Loader) ReadMessages(reader io.Reader, tag *language.Tag) error
 	}
 
 	tagStr := t.String()
-	ldr.catalogsByTagStr[tagStr] = NewStringCatalog()
+	ldr.catalogsByTagStr[tagStr] = NewStringCatalog(modTime)
 
 	for _, u := range xlf.File.Unit {
 		for _, seg := range u.Segment {

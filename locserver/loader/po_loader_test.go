@@ -3,6 +3,7 @@ package loader
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/text/language"
@@ -32,7 +33,7 @@ func TestSimplePOLoad(t *testing.T) {
 
 	loader := NewPOLoader()
 	enTag, _ := language.Parse("en-us")
-	err := loader.ReadMessages(reader, &enTag)
+	err := loader.ReadMessages(reader, &enTag, time.Now())
 
 	assert.Nil(t, err)
 
@@ -65,12 +66,12 @@ func TestMultiplePOLoad(t *testing.T) {
 	loader := NewPOLoader()
 	reader := strings.NewReader(data)
 	enTag, _ := language.Parse("en-us")
-	err := loader.ReadMessages(reader, &enTag)
+	err := loader.ReadMessages(reader, &enTag, time.Now())
 	assert.Nil(t, err)
 
 	reader = strings.NewReader(data2)
 	zhTag, _ := language.Parse("en-us")
-	err = loader.ReadMessages(reader, &zhTag)
+	err = loader.ReadMessages(reader, &zhTag, time.Now())
 	assert.Nil(t, err)
 
 	// Test the first lang

@@ -2,13 +2,15 @@ package loader
 
 import (
 	"io"
+	"time"
 
 	"golang.org/x/text/language"
 )
 
 // StringCatalog lets us store an entire catalog by tag.
 type StringCatalog struct {
-	Strings map[string]string
+	Strings     map[string]string
+	LastModTime time.Time
 }
 
 // Loader loads messages.
@@ -21,12 +23,13 @@ type Loader interface {
 
 	// ReadMessages loads messages from the given reader.
 	// tag may be ignored by the implementation if NeedsTag is false.
-	ReadMessages(reader io.Reader, tag *language.Tag) error
+	ReadMessages(reader io.Reader, tag *language.Tag, modTime time.Time) error
 }
 
 // NewStringCatalog factory method.
-func NewStringCatalog() *StringCatalog {
+func NewStringCatalog(modTime time.Time) *StringCatalog {
 	return &StringCatalog{
-		Strings: map[string]string{},
+		Strings:     map[string]string{},
+		LastModTime: modTime,
 	}
 }

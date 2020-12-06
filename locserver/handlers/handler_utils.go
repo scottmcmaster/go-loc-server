@@ -38,18 +38,18 @@ func ExtractContentType(req *http.Request) (contentType string) {
 	// Default to csv
 	contentType = DefaultContentType
 
-	contentType = GetQueryParam(req, "fmt")
-	if len(contentType) == 0 {
+	fmtParam := GetQueryParam(req, "fmt")
+	if len(fmtParam) > 0 {
 		log.Debug().
 			Msg("Returning format from query param")
-		return
+		return fmtParam
 	}
 
 	rawHeader := req.Header.Get("Accept")
 	if len(rawHeader) == 0 {
 		log.Debug().
 			Msg("Returning default format")
-		return
+		return DefaultContentType
 	}
 
 	log.Debug().
